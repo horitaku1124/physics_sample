@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>物理演算</title>
+
+  <script>
+    const gravity = 0.1; // 重力加速度
+    const objects = [];
+    class Ball {
+      constructor(x, y) {
+        this.x = x; // X座標
+        this.y = y; // Y座標
+        this.speedX = 0; // X軸の速度
+        this.speedY = 0; // Y軸の速度
+      }
+    }
+    let canvasHeight, canvasWidth, request;
+    document.addEventListener("DOMContentLoaded", () => {
+      let canvas = document.getElementById("canvas1");
+      let ctx = canvas.getContext("2d");
+      canvasHeight = canvas.height;
+      canvasWidth = canvas.width;
+      let radius = 5;
+
+      // 毎フレームの描画処理
+      const animationFrame = () => {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvasHeight, canvasWidth);
+        ctx.fillStyle = 'black';
+        for (let i = 0;i < objects.length;i++) {
+          let obj = objects[i];
+          if (!obj) continue;
+          ctx.beginPath();
+          ctx.arc(obj.x, obj.y, radius, 0, 2 * Math.PI, false);
+          ctx.fill();
+          ctx.stroke();
+
+          // 重力によって加速する
+          obj.speedY += gravity;
+          // 加速された速度によって移動していく
+          obj.x += obj.speedX;
+          obj.y += obj.speedY;
+
+          // 横の壁に当たったら進行方向を逆に
+          if (obj.x < radius) {
+            obj.x = radius;
+            obj.speedX *= -1;
+          } else if (obj.x > canvasWidth - radius) {
+            obj.x = canvasWidth - radius;
+            obj.speedX *= -1;
+          }
+
+          // 床に接触するたびに上方向に反発する。
+          if (obj.y > canvasHeight - radius) {
+            obj.y = canvasHeight - radius;
+            obj.speedY *= -0.5;
+            obj.speedX *= 0.9; // 床に接触した際の摩擦を計算
+          }
+
+          objects[i] = obj;
+        }
+        request = requestAnimationFrame(animationFrame)
+      }
+
+      requestAnimationFrame(animationFrame);
+    });
+
+    function cancelAnimation() {
+      cancelAnimationFrame(request);
+    }
+    function addObject() {
+      // ランダムな位置に、ボールを追加していく
+      let ball = new Ball(Math.floor(Math.random() * canvasWidth), 0);
+      ball.speedX = Math.random() * 5 - 2.5;
+      objects.push(ball);
+      console.log(objects);
+    }
+
+  </script>
+</head>
+<body>
+<canvas id="canvas1" width="400" height="400" style="border: 1px solid #aaa;"></canvas>
+<p>
+  <input type="button" value="ボール追加" onclick="addObject()">
+  <input type="button" value="停止" onclick="cancelAnimation()">
+</p>
+</body>
+</html>
