@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>モンテカルロ法</title>
+
+  <script>
+    const pointsInsideCircle = [];
+    const pointsOutsideCircle = [];
+    class Point {
+      constructor(x, y) {
+        this.x = x; // X座標
+        this.y = y; // Y座標
+      }
+    }
+    let canvasHeight, canvasWidth, request;
+    let radius, center;
+    document.addEventListener("DOMContentLoaded", () => {
+      let canvas = document.getElementById("canvas1");
+      let ctx = canvas.getContext("2d");
+
+      // 画面を白でクリア
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvasHeight, canvasWidth);
+
+      canvasHeight = canvas.height;
+      canvasWidth = canvas.width;
+      radius = canvasWidth / 2;
+      center = canvasWidth / 2;
+
+
+      // ガイドを描画
+      ctx.lineWidth = 0.5;
+
+      ctx.beginPath();
+      ctx.moveTo(canvasWidth / 2, 0);
+      ctx.lineTo(canvasWidth / 2, canvasHeight);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(0, canvasHeight / 2);
+      ctx.lineTo(canvasWidth, canvasHeight / 2);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(center, center, radius, 0, 2 * Math.PI, false);
+      ctx.stroke();
+
+      requestAnimationFrame(paintFrame);
+    });
+
+    let lastPaintInsideCount = 0;
+    let lastPaintOutsideCount = 0;
+    function paintFrame() {
+      console.time("paintFrame");
+      let canvas = document.getElementById("canvas1");
+      let ctx = canvas.getContext("2d");
+
+      ctx.fillStyle = 'red';
+      ctx.lineWidth = 0;
+      for (let i = lastPaintInsideCount;i < pointsInsideCircle.length;i++) {
+        const obj = pointsInsideCircle[i];
+        ctx.beginPath();
+        ctx.arc(obj.x, obj.y, 1, 0, 2 * Math.PI, false);
+        ctx.fill();
+      }
+      lastPaintInsideCount = pointsInsideCircle.length;
+
+      ctx.fillStyle = 'blue';
+      for (let i = lastPaintOutsideCount;i < pointsOutsideCircle.length;i++) {
+        const obj = pointsOutsideCircle[i];
+        ctx.beginPath();
+        ctx.arc(obj.x, obj.y, 1, 0, 2 * Math.PI, false);
+        ctx.fill();
+      }
+      lastPaintOutsideCount = pointsOutsideCircle.length;
+
+      console.timeEnd("paintFrame");
+    }
+    function addObject(num) {
+      console.time("addObject");
+      // 指定された数だけ、オブジェクトを生成する
+      for(let i = 0;i < num;i++) {
+        // 画面内のランダムな位置に、オブジェクトを配置
+        let point = new Point(Math.floor(Math.random() * canvasWidth), Math.floor(Math.random() * canvasHeight));
+        let dx = point.x - center;
+        let dy = point.y - center;
+        // オブジェクトが円の内側か
+        const insideCircle = (dx * dx + dy * dy) < (radius * radius);
+        if (insideCircle) {
+          pointsInsideCircle.push(point);
+        } else {
+          pointsOutsideCircle.push(point);
+        }
+      }
+      // console.log(pointsInsideCircle, pointsOutsideCircle);
+      console.timeEnd("addObject");
+      const insideCount = pointsInsideCircle.length;
+      const allCount = insideCount + pointsOutsideCircle.length;
+      // 導いた公式から円周率の近似値を計算
+      const pi = 4.0 * insideCount / allCount;
+      // 全部の点の数
+      document.getElementById('all_count').innerText = allCount.toString();
+      // 円の中の点の数
+      document.getElementById('inside_count').innerText = insideCount.toString();
+      // 円周率
+      document.getElementById('pi').innerText = pi.toString();
+      // πとの誤差
+      document.getElementById('pi_error').innerText = 100 * (Math.PI - pi) / Math.PI + "%";
+      requestAnimationFrame(paintFrame);
+    }
+
+  </script>
+</head>
+<body>
+<h1>モンテカルロ法を使って円周率を求める</h1>
+<section style="display: flex">
+  <canvas id="canvas1" width="400" height="400" style="border: 1px solid #aaa;"></canvas>
+  <div>
+    <p>全部の数：<span id="all_count"></span></p>
+    <p>円内の数：<span id="inside_count"></span></p>
+    <p>円周率：<span id="pi"></span></p>
+    <p>πとの誤差：<span id="pi_error"></span></p>
+  </div>
+</section>
+<p>
+  <input type="button" value="+1" onclick="addObject(1)">
+  <input type="button" value="+10" onclick="addObject(10)">
+  <input type="button" value="+100" onclick="addObject(100)">
+  <input type="button" value="+1000" onclick="addObject(1000)">
+  <input type="button" value="+10000" onclick="addObject(10000)">
+  <input type="button" value="+50000" onclick="addObject(50000)">
+</p>
+</body>
+</html>
