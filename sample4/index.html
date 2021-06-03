@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>物理演算</title>
+
+  <script>
+    const gravity = 0.1; // 重力加速度
+    const objects = [];
+    class Ball {
+      constructor(x, y) {
+        this.x = x; // X座標
+        this.y = y; // Y座標
+        this.speedX = 0; // X軸の速度
+        this.speedY = 0; // Y軸の速度
+      }
+    }
+    let canvasHeight, canvasWidth, request;
+    let radius = 5;
+    document.addEventListener("DOMContentLoaded", () => {
+      let canvas = document.getElementById("canvas1");
+      let ctx = canvas.getContext("2d");
+      canvasHeight = canvas.height;
+      canvasWidth = canvas.width;
+
+      // 毎フレームの描画処理
+      const animationFrame = () => {
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvasHeight, canvasWidth);
+        ctx.fillStyle = 'black';
+        for (let i = 0;i < objects.length;i++) {
+          let obj = objects[i];
+          if (!obj) continue;
+          ctx.beginPath();
+          ctx.arc(obj.x, obj.y, radius, 0, 2 * Math.PI, false);
+          ctx.fill();
+          ctx.stroke();
+
+          // 重力によって加速する
+          obj.speedY += gravity;
+          // 加速された速度によって移動していく
+          obj.x += obj.speedX;
+          obj.y += obj.speedY;
+
+
+          for (let j = 0;j < objects.length;j++) {
+            if (i === j) continue;
+            const obj2 = objects[j];
+            let distance = Math.sqrt(Math.pow(obj.x - obj2.x, 2) + Math.pow(obj.y - obj2.y, 2)) - 2 * radius;
+            if (distance < 0) {
+              distance = Math.abs(distance);
+              const theta = Math.atan2(obj2.y - obj.y, obj2.x - obj.x);
+              // console.log("theta", theta);
+              // console.log("obj", obj);
+              // console.log("obj2", obj2);
+              // console.log("obj", JSON.stringify(obj));
+              // console.log("obj2", JSON.stringify(obj2));
+
+              let dv = Math.sqrt(Math.pow(obj2.speedX - obj.speedX, 2) + Math.pow(obj2.speedY - obj.speedY, 2));
+              // console.log("dv", dv);
+              // obj.speedX += obj2.speedX * Math.cos(theta);
+              // obj.speedY += obj2.speedY * Math.sin(theta);
+              // obj2.speedX += obj.speedX * Math.cos(theta);
+              // obj2.speedY += obj.speedY * Math.sin(theta);
+              const va = Math.sqrt(Math.pow(obj.speedX, 2) + Math.pow(obj.speedY, 2));
+              const vb = -Math.sqrt(Math.pow(obj2.speedX, 2) + Math.pow(obj2.speedY, 2));
+              const C = 0.5;
+              const va2 = (va + vb - C * va + C * vb) / 2;
+              const vb2 = (va + vb + C * va - C * vb) / 2;
+              // console.log("va", va);
+              // console.log("vb", vb);
+              // console.log("va2", va2);
+              // console.log("vb2", vb2);
+              obj.speedX = va2 * Math.cos(theta + Math.random() * 0.001);
+              obj.speedY = va2 * Math.sin(theta + Math.random() * 0.001);
+              obj2.speedX = vb2 * Math.cos(theta + Math.random() * 0.001);
+              obj2.speedY = vb2 * Math.sin(theta + Math.random() * 0.001);
+              obj.x -= distance * Math.cos(theta) / 2 * 1.001;
+              obj.y -= distance * Math.sin(theta) / 2 * 1.001;
+              obj2.x += distance * Math.cos(theta) / 2 * 1.001;
+              obj2.y += distance * Math.sin(theta) / 2 * 1.001;
+
+              // console.log("obj", obj);
+              // console.log("obj2", obj2);
+
+              objects[j] = obj2;
+              // return;
+            }
+          }
+
+          // 横の壁に当たったら進行方向を逆に
+          if (obj.x < radius) {
+            obj.x = radius;
+            obj.speedX *= -1;
+          } else if (obj.x > canvasWidth - radius) {
+            obj.x = canvasWidth - radius;
+            obj.speedX *= -1;
+          }
+
+          // 床に接触するたびに上方向に反発する。
+          if (obj.y > canvasHeight - radius) {
+            obj.y = canvasHeight - radius;
+            obj.speedY *= -0.5;
+            obj.speedX *= 0.9; // 床に接触した際の摩擦を計算
+          }
+
+          objects[i] = obj;
+        }
+        request = requestAnimationFrame(animationFrame)
+      }
+
+      requestAnimationFrame(animationFrame);
+    });
+
+    function cancelAnimation() {
+      cancelAnimationFrame(request);
+    }
+    function addObject() {
+      // ランダムな位置に、ボールを追加していく
+      let ball = new Ball(Math.floor(Math.random() * canvasWidth), 0);
+      // let ball = new Ball(10, 0);
+      ball.speedX = Math.random() * 5 - 2.5;
+      objects.push(ball);
+      console.log(objects);
+    }
+
+  </script>
+</head>
+<body>
+<canvas id="canvas1" width="400" height="400" style="border: 1px solid #aaa;"></canvas>
+<p>
+  <input type="button" value="ボール追加" onclick="addObject()">
+  <input type="button" value="停止" onclick="cancelAnimation()">
+</p>
+</body>
+</html>
