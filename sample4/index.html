@@ -17,6 +17,7 @@
     }
     let canvasHeight, canvasWidth, request;
     let radius = 5;
+    const Bounce = 0.5; // 反発係数
     document.addEventListener("DOMContentLoaded", () => {
       let canvas = document.getElementById("canvas1");
       let ctx = canvas.getContext("2d");
@@ -42,49 +43,36 @@
           obj.x += obj.speedX;
           obj.y += obj.speedY;
 
-
           for (let j = 0;j < objects.length;j++) {
             if (i === j) continue;
             const obj2 = objects[j];
+
+            // 2つのオブジェクト間の距離が0以下なら衝突判定
             let distance = Math.sqrt(Math.pow(obj.x - obj2.x, 2) + Math.pow(obj.y - obj2.y, 2)) - 2 * radius;
             if (distance < 0) {
               distance = Math.abs(distance);
+              // 2つのオブジェクトの角度
               const theta = Math.atan2(obj2.y - obj.y, obj2.x - obj.x);
-              // console.log("theta", theta);
-              // console.log("obj", obj);
-              // console.log("obj2", obj2);
-              // console.log("obj", JSON.stringify(obj));
-              // console.log("obj2", JSON.stringify(obj2));
 
-              let dv = Math.sqrt(Math.pow(obj2.speedX - obj.speedX, 2) + Math.pow(obj2.speedY - obj.speedY, 2));
-              // console.log("dv", dv);
-              // obj.speedX += obj2.speedX * Math.cos(theta);
-              // obj.speedY += obj2.speedY * Math.sin(theta);
-              // obj2.speedX += obj.speedX * Math.cos(theta);
-              // obj2.speedY += obj.speedY * Math.sin(theta);
+              // オブジェクト間の直線速度を計算する
               const va = Math.sqrt(Math.pow(obj.speedX, 2) + Math.pow(obj.speedY, 2));
               const vb = -Math.sqrt(Math.pow(obj2.speedX, 2) + Math.pow(obj2.speedY, 2));
-              const C = 0.5;
-              const va2 = (va + vb - C * va + C * vb) / 2;
-              const vb2 = (va + vb + C * va - C * vb) / 2;
-              // console.log("va", va);
-              // console.log("vb", vb);
-              // console.log("va2", va2);
-              // console.log("vb2", vb2);
+              // 衝突後の速度の計算
+              const va2 = (va + vb - Bounce * va + Bounce * vb) / 2;
+              const vb2 = (va + vb + Bounce * va - Bounce * vb) / 2;
+
               obj.speedX = va2 * Math.cos(theta + Math.random() * 0.001);
               obj.speedY = va2 * Math.sin(theta + Math.random() * 0.001);
               obj2.speedX = vb2 * Math.cos(theta + Math.random() * 0.001);
               obj2.speedY = vb2 * Math.sin(theta + Math.random() * 0.001);
+
+              // オブジェクトがめり込んでいるので補正する
               obj.x -= distance * Math.cos(theta) / 2 * 1.001;
               obj.y -= distance * Math.sin(theta) / 2 * 1.001;
               obj2.x += distance * Math.cos(theta) / 2 * 1.001;
               obj2.y += distance * Math.sin(theta) / 2 * 1.001;
 
-              // console.log("obj", obj);
-              // console.log("obj2", obj2);
-
               objects[j] = obj2;
-              // return;
             }
           }
 
@@ -118,7 +106,6 @@
     function addObject() {
       // ランダムな位置に、ボールを追加していく
       let ball = new Ball(Math.floor(Math.random() * canvasWidth), 0);
-      // let ball = new Ball(10, 0);
       ball.speedX = Math.random() * 5 - 2.5;
       objects.push(ball);
       console.log(objects);
