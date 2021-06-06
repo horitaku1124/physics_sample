@@ -32,7 +32,7 @@
 
       paintTo(ctx) {
         ctx.beginPath();
-        ctx.rect(this.x - radius, this.y - radius, radius * 2, radius * 2);
+        ctx.rect(this.x - width, this.y - width, width * 2, width * 2);
         ctx.stroke();
       }
     }
@@ -62,6 +62,7 @@
     }
     let canvasHeight, canvasWidth, request;
     const radius = 5;
+    const width = 5;
     const Bounce = 0.5; // 反発係数
     document.addEventListener("DOMContentLoaded", () => {
       let canvas = document.getElementById("canvas1");
