@@ -7,6 +7,7 @@
   <script>
     const gravity = 0.1; // 重力加速度
     const objects = [];
+    // 自由に動けるボール
     class Ball {
       constructor(x, y) {
         this.x = x; // X座標
@@ -22,6 +23,7 @@
         ctx.stroke();
       }
     }
+    // 振り子の止め部分
     class Pendulum {
       constructor(x, y) {
         this.x = x; // X座標
@@ -30,11 +32,11 @@
 
       paintTo(ctx) {
         ctx.beginPath();
-        ctx.arc(this.x, this.y, radius, 0, 2 * Math.PI, false);
-        ctx.fill();
+        ctx.rect(this.x - radius, this.y - radius, radius * 2, radius * 2);
         ctx.stroke();
       }
     }
+    // 制約付きのボール
     class ConstraintBall {
       constructor(obj, theta, distance) {
         this.consTo = obj;
@@ -88,7 +90,9 @@
                 Math.pow(obj.x - obj.consTo.x, 2)
                 + Math.pow(obj.y - obj.consTo.y, 2)
             );
+            // 計算の結果、制約から離れてしまった分を補正する
             let ratio = distance / obj.distance;
+            // その時の差分を移動エネルギーとする
             let x2 = (obj.x - obj.consTo.x) / ratio + obj.consTo.x;
             let y2 = (obj.y - obj.consTo.y) / ratio + obj.consTo.y;
             obj.speedX += x2 - obj.x;
@@ -96,7 +100,7 @@
             obj.x = x2;
             obj.y = y2;
           }
-          if (obj instanceof Ball) {
+          if (obj instanceof Ball || obj instanceof ConstraintBall) {
             // 重力によって加速する
             obj.speedY += gravity;
             // 加速された速度によって移動していく
@@ -175,7 +179,7 @@
     }
     function addObject2() {
       let pendulum = new Pendulum(canvasWidth / 2, 10);
-      let ball = new ConstraintBall(pendulum, 1, 300);
+      let ball = new ConstraintBall(pendulum, 0.9, 300);
       objects.push(pendulum);
       objects.push(ball);
       console.log(objects);
