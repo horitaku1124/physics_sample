@@ -101,13 +101,14 @@
             obj.x = x2;
             obj.y = y2;
           }
-          if (obj instanceof Ball || obj instanceof ConstraintBall) {
+          if (obj instanceof Ball) {
             // 重力によって加速する
             obj.speedY += gravity;
             // 加速された速度によって移動していく
             obj.x += obj.speedX;
             obj.y += obj.speedY;
-
+          }
+          if (obj instanceof Ball || obj instanceof ConstraintBall) {
             for (let j = 0;j < objects.length;j++) {
               if (i === j) continue;
               const obj2 = objects[j];
