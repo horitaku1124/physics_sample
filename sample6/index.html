@@ -60,7 +60,7 @@
         ctx.stroke();
       }
     }
-
+    // 傾斜
     class Slope {
       constructor(startX, startY, stopX, stopY) {
         this.startX = startX;
@@ -68,7 +68,9 @@
         this.stopX = stopX;
         this.stopY = stopY;
 
+        // 傾き
         this.slant = (stopY - startY) / (stopX - startX);
+        // 切片
         this.intercept = stopY - this.slant * stopX;
       }
       paintTo(ctx) {
@@ -83,6 +85,7 @@
     const radius = 5;
     const width = 5;
     const Bounce = 0.5; // 反発係数
+    const PI_2 = 2 * Math.PI;
     document.addEventListener("DOMContentLoaded", () => {
       let canvas = document.getElementById("canvas1");
       let ctx = canvas.getContext("2d");
@@ -90,8 +93,7 @@
       canvasWidth = canvas.width;
 
       objects.push(new Slope(100, 100, 200, 200));
-
-      objects.push(new Slope(400, 200, 250, 300));
+      objects.push(new Slope(250, 300, 400, 200));
 
       // 毎フレームの描画処理
       const animationFrame = () => {
@@ -164,26 +166,40 @@
                   obj2.y += distance * Math.sin(theta) / 2 * 1.001;
                 }
               }
+
+              // 傾斜と衝突した場合
               if (obj2 instanceof Slope) {
+                let x1 = obj.x;
                 let y1 = obj.y;
+                let x2 = obj.x - obj.speedX;
                 let y2 = obj.y - obj.speedY;
-                let bound1 = obj2.slant * obj.x + obj2.intercept;
-                let crossed = (y2 < bound1 && bound1 < y1) || (y1 < bound1 && bound1 < y2);
+                // 衝突前に線分を超えていないこと、衝突後に線分を超えていること
+                let over1 = (obj2.slant * x1 + obj2.intercept) > y1;
+                let over2 = (obj2.slant * x2 + obj2.intercept) < y2;
                 let insideX = (obj2.startX < obj.x && obj2.stopX > obj.x) || (obj2.startX > obj.x && obj2.stopX < obj.x);
                 let insideY = (obj2.startY < obj.y && obj2.stopY > obj.y) || (obj2.startY > obj.y && obj2.stopY < obj.y);
-                if (crossed && insideX && insideY) {
-                  // console.log("bound1", bound1, "y1", y1, "y2", y2);
+
+                if ((over1 === over2) && insideX && insideY) {
+                  // 線分の角度
                   let theta1 = Math.atan2(obj2.stopY - obj2.startY, obj2.stopX - obj2.startX);
+                  // ボールの進行方向
                   let theta2 = Math.atan2(obj.speedY, obj.speedX);
-                  let axis = theta1 + Math.PI / 2;
-                  let diff = axis - theta2;
-                  let reflect = axis + diff + Math.PI;
-                  let speed = Math.sqrt(Math.pow(obj.speedX, 2) + Math.pow(obj.speedY, 2));
+                  // 傾斜に対する垂直方向
+                  let vertical = theta1 + Math.PI / 2;
+                  // 傾斜に対する垂直との角度差分
+                  let diff = vertical - theta2;
+                  if (diff > PI_2) {
+                    diff -= PI_2;
+                  }
+                  // 傾斜にぶつかった後の角度を計算
+                  let reflect = vertical + diff + Math.PI;
+                  if (reflect > PI_2) {
+                    reflect -= PI_2;
+                  }
+                  let speed = Math.sqrt(Math.pow(obj.speedX, 2) + Math.pow(obj.speedY, 2)) * Bounce;
                   obj.speedX = Math.cos(reflect) * speed;
                   obj.speedY = Math.sin(reflect) * speed;
-                  obj.y = bound1;
-                  // console.log("theta1", theta1, "theta2", theta2, "axis", axis, "diff", diff, "reflect", reflect);
-                  // console.log("obj", obj, "speed", speed);
+                  obj.y = obj2.slant * x2 + obj2.intercept - radius;
                 }
               }
               objects[j] = obj2;
@@ -232,12 +248,6 @@
       objects.push(ball);
       console.log(objects);
     }
-    function addObject3() {
-      // ランダムな位置に、ボールを追加していく
-      let ball = new Ball(150, 0);
-      objects.push(ball);
-      console.log(objects);
-    }
 
   </script>
 </head>
@@ -246,7 +256,6 @@
 <p>
   <input type="button" value="ボール追加" onclick="addObject()">
   <input type="button" value="振り子追加" onclick="addObject2()">
-  <input type="button" value="ボール追加3" onclick="addObject3()">
   <input type="button" value="停止" onclick="cancelAnimation()">
 </p>
 </body>
